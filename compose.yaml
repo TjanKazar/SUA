@@ -1,0 +1,39 @@
+services:
+  api:
+    build:
+      context: ./restaurantService
+      dockerfile: Dockerfile
+    container_name: food-delivery-api
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - MONGO_URI=mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/?appName=Cluster0&tls=true&tlsAllowInvalidCertificates=true
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/restaurants"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./FrontEnd/SOA_frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:5000
+    container_name: food-delivery-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+
+networks:
+  food-delivery-network:
+    driver: bridge

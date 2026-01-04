@@ -1,0 +1,200 @@
+{
+  "info": {
+    "name": "Restaurant Service API",
+    "_postman_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+    "description": "Postman collection for the Flask Restaurant Service API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All Restaurants",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants"]
+        }
+      }
+    },
+    {
+      "name": "Get Restaurant by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id"]
+        }
+      }
+    },
+    {
+      "name": "Create Restaurant",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"My Restaurant\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/restaurants",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants"]
+        }
+      }
+    },
+    {
+      "name": "Update Restaurant",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Restaurant\",\n  \"status\": \"open\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id"]
+        }
+      }
+    },
+    {
+      "name": "Delete Restaurant",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id"]
+        }
+      }
+    },
+    {
+      "name": "Open Restaurant",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id/open",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id", "open"]
+        }
+      }
+    },
+    {
+      "name": "Get Menu",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id/menu",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id", "menu"]
+        }
+      }
+    },
+    {
+      "name": "Add Menu Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Pizza\",\n  \"price\": 12.5\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id/menu",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id", "menu"]
+        }
+      }
+    },
+    {
+      "name": "Get Menu Item",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id/menu/:item_id",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id", "menu", ":item_id"]
+        }
+      }
+    },
+    {
+      "name": "Update Menu Item",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Pizza\",\n  \"price\": 14.0\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id/menu/:item_id",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id", "menu", ":item_id"]
+        }
+      }
+    },
+    {
+      "name": "Delete Menu Item",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/restaurants/:restaurant_id/menu/:item_id",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "5000",
+          "path": ["restaurants", ":restaurant_id", "menu", ":item_id"]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+.restaurant-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.restaurant-image {
+  height: 160px;
+  background: linear-gradient(135deg, var(--primary-color), #ff8f6b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.restaurant-icon {
+  font-size: 4rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.status-badge {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.open {
+  background: var(--success-color);
+  color: var(--white);
+}
+
+.status-badge.closed {
+  background: var(--danger-color);
+  color: var(--white);
+}
+
+.restaurant-info {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.restaurant-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 10px;
+}
+
+.restaurant-meta {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.875rem;
+  color: var(--dark-gray);
+}
+
+.restaurant-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 15px;
+  border-top: 1px solid var(--light-gray);
+}
+
+.menu-count {
+  font-size: 0.875rem;
+  color: var(--dark-gray);
+}
+
+.view-menu {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}

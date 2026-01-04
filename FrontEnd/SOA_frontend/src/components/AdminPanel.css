@@ -1,0 +1,259 @@
+.admin-panel {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.admin-header h1 {
+  font-size: 2rem;
+  color: var(--secondary-color);
+}
+
+.admin-restaurants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-restaurant-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.restaurant-main-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+.restaurant-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.restaurant-info h3 {
+  font-size: 1.25rem;
+  color: var(--secondary-color);
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.open {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.closed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.restaurant-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.toggle-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.toggle-btn.open {
+  background: #d4edda;
+  color: #155724;
+}
+
+.toggle-btn.closed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.action-btn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.action-btn.menu-btn {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.action-btn.edit-btn {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.action-btn.delete-btn {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Menu Section */
+.menu-section {
+  padding: 20px;
+  background: var(--light-gray);
+  border-top: 1px solid var(--medium-gray);
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.menu-header h4 {
+  font-size: 1rem;
+  color: var(--secondary-color);
+}
+
+.menu-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.menu-item-admin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.menu-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-name {
+  font-weight: 500;
+  color: var(--secondary-color);
+}
+
+.item-price {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.menu-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn-sm {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.action-btn-sm.edit-btn {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.action-btn-sm.delete-btn {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+.no-menu-items {
+  text-align: center;
+  color: var(--dark-gray);
+  padding: 20px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: 30px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h2 {
+  margin-bottom: 25px;
+  color: var(--secondary-color);
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .restaurant-main-info {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .restaurant-info {
+    flex-direction: column;
+  }
+}
