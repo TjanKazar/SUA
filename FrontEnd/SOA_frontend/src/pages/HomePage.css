@@ -1,0 +1,52 @@
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, var(--primary-color), #ff8f6b);
+  border-radius: var(--border-radius);
+  padding: 60px 40px;
+  text-align: center;
+  color: var(--white);
+  margin-bottom: 40px;
+}
+
+.hero-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.restaurants-section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 1.75rem;
+  color: var(--secondary-color);
+  margin-bottom: 25px;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 40px 20px;
+  }
+
+  .hero-content h1 {
+    font-size: 1.75rem;
+  }
+
+  .hero-content p {
+    font-size: 1rem;
+  }
+}
