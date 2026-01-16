@@ -1,0 +1,224 @@
+{
+  "info": {
+    "name": "Order & Payment Services",
+    "description": "Complete Postman collection for Order Service (3002) and Payment Service (3003)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "order_base_url",
+      "value": "http://localhost:3002"
+    },
+    {
+      "key": "payment_base_url",
+      "value": "http://localhost:3003"
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": "user1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Order Service",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"user1\",\n  \"restaurantId\": \"507f1f77bcf86cd799439011\",\n  \"items\": [\n    {\n      \"itemId\": \"item1\",\n      \"name\": \"Pizza Margherita\",\n      \"quantity\": 2,\n      \"price\": 12.99\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/orders",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{order_base_url}}/orders",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Order By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{order_base_url}}/orders/{{orderId}}",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Orders By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{order_base_url}}/orders/user/{{userId}}",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders", "user", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Order Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{order_base_url}}/orders/{{orderId}}/status",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Update Order Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\",\n  \"deliveryStatus\": \"on_the_way\"\n}"
+            },
+            "url": {
+              "raw": "{{order_base_url}}/orders/{{orderId}}/status",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders", "{{orderId}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{order_base_url}}/orders/{{orderId}}",
+              "host": ["{{order_base_url}}"],
+              "path": ["orders", "{{orderId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment Service",
+      "item": [
+        {
+          "name": "Create Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"userId\": \"user1\",\n  \"amount\": 25.98,\n  \"status\": \"pending\"\n}"
+            },
+            "url": {
+              "raw": "{{payment_base_url}}/payments",
+              "host": ["{{payment_base_url}}"],
+              "path": ["payments"]
+            }
+          }
+        },
+        {
+          "name": "Get All Payments",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{payment_base_url}}/payments",
+              "host": ["{{payment_base_url}}"],
+              "path": ["payments"]
+            }
+          }
+        },
+        {
+          "name": "Get Payment By ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{payment_base_url}}/payments/{{paymentId}}",
+              "host": ["{{payment_base_url}}"],
+              "path": ["payments", "{{paymentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Payments By User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{payment_base_url}}/payments/user/{{userId}}",
+              "host": ["{{payment_base_url}}"],
+              "path": ["payments", "user", "{{userId}}"]
+            }
+          }
+        },
+        {
+          "name": "Confirm Payment",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{payment_base_url}}/payments/{{paymentId}}/confirm",
+              "host": ["{{payment_base_url}}"],
+              "path": ["payments", "{{paymentId}}", "confirm"]
+            }
+          }
+        },
+        {
+          "name": "Update Payment Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            },
+            "url": {
+              "raw": "{{payment_base_url}}/payments/{{paymentId}}/status",
+              "host": ["{{payment_base_url}}"],
+              "path": ["payments", "{{paymentId}}", "status"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

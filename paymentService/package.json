@@ -1,0 +1,21 @@
+{
+  "name": "payment-service",
+  "version": "1.0.0",
+  "description": "Payment Service for SOA Food Delivery App",
+  "main": "payment_service.js",
+  "scripts": {
+    "start": "node payment_service.js",
+    "dev": "nodemon payment_service.js"
+  },
+  "keywords": ["payment", "service", "soa"],
+  "author": "JURE",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^4.25.0",
+    "axios": "^1.6.0",
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

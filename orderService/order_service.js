@@ -1,0 +1,235 @@
+const express = require('express');
+const axios = require('axios');
+const { MongoClient } = require('mongodb');
+const app = express();
+const PORT = 3002;
+
+const MONGO_URI = "mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/order_service";
+let ordersCollection;
+
+app.use(express.json());
+
+// Initialize MongoDB connection
+async function initializeDatabase() {
+  try {
+    const client = new MongoClient(MONGO_URI);
+    await client.connect();
+    const db = client.db('order_service');
+    ordersCollection = db.collection('orders');
+
+    // Create indexes
+    await ordersCollection.createIndex({ userId: 1 });
+    await ordersCollection.createIndex({ restaurantId: 1 });
+    await ordersCollection.createIndex({ status: 1 });
+
+    // Insert sample data if collection is empty
+    const count = await ordersCollection.countDocuments();
+    if (count === 0) {
+      await ordersCollection.insertMany([
+        {
+          userId: 'user1',
+          restaurantId: '507f1f77bcf86cd799439011',
+          items: [
+            { itemId: 'item1', name: 'Pizza Margherita', quantity: 1, price: 12.99 }
+          ],
+          totalPrice: 12.99,
+          status: 'pending',
+          createdAt: new Date('2026-01-15T10:00:00'),
+          deliveryStatus: 'pending'
+        },
+        {
+          userId: 'user2',
+          restaurantId: '507f1f77bcf86cd799439011',
+          items: [
+            { itemId: 'item2', name: 'Burger Deluxe', quantity: 2, price: 9.99 }
+          ],
+          totalPrice: 19.98,
+          status: 'confirmed',
+          createdAt: new Date('2026-01-15T11:30:00'),
+          deliveryStatus: 'on_the_way'
+        }
+      ]);
+    }
+
+    console.log('MongoDB connected - order_service database initialized');
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    process.exit(1);
+  }
+}
+
+// POST /orders - Create new order
+app.post('/orders', async (req, res) => {
+  try {
+    const { userId, restaurantId, items } = req.body;
+
+    if (!userId || !restaurantId || !items || items.length === 0) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Verify restaurant exists (call restaurant service)
+    try {
+      await axios.get(`http://api:5000/restaurants/${restaurantId}`);
+    } catch (error) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    // Calculate total price
+    const totalPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    const newOrder = {
+      userId,
+      restaurantId,
+      items,
+      totalPrice,
+      status: 'pending',
+      createdAt: new Date(),
+      deliveryStatus: 'pending'
+    };
+
+    const result = await ordersCollection.insertOne(newOrder);
+    newOrder._id = result.insertedId;
+
+    // Notify payment service to process payment
+    try {
+      await axios.post('http://payment-service:3003/payments', {
+        orderId: newOrder._id.toString(),
+        userId,
+        amount: totalPrice,
+        status: 'pending'
+      });
+    } catch (error) {
+      console.error('Payment service notification failed:', error.message);
+    }
+
+    res.status(201).json({ ...newOrder, _id: newOrder._id.toString() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /orders - Get all orders
+app.get('/orders', async (req, res) => {
+  try {
+    const orders = await ordersCollection.find({}).toArray();
+    const formattedOrders = orders.map(o => ({
+      ...o,
+      _id: o._id.toString()
+    }));
+    res.json(formattedOrders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /orders/:id - Get order by ID
+app.get('/orders/:id', async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const order = await ordersCollection.findOne({ _id: new ObjectId(req.params.id) });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json({ ...order, _id: order._id.toString() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /orders/user/:userId - Get orders by user ID
+app.get('/orders/user/:userId', async (req, res) => {
+  try {
+    const userOrders = await ordersCollection.find({ userId: req.params.userId }).toArray();
+    const formattedOrders = userOrders.map(o => ({
+      ...o,
+      _id: o._id.toString()
+    }));
+    res.json(formattedOrders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /orders/:id/status - Get order status
+app.get('/orders/:id/status', async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const order = await ordersCollection.findOne({ _id: new ObjectId(req.params.id) });
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+    res.json({ 
+      orderId: order._id.toString(),
+      status: order.status,
+      deliveryStatus: order.deliveryStatus
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /orders/:id/status - Update order status
+app.put('/orders/:id/status', async (req, res) => {
+  try {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid order ID format' });
+    }
+    
+    const { status, deliveryStatus } = req.body;
+    
+    if (!status && !deliveryStatus) {
+      return res.status(400).json({ error: 'No status or deliveryStatus provided' });
+    }
+    
+    const updateData = {};
+    if (status) updateData.status = status;
+    if (deliveryStatus) updateData.deliveryStatus = deliveryStatus;
+
+    const result = await ordersCollection.findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updateData },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.status(200).json({ ...result.value, _id: result.value._id.toString() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /orders/:id - Cancel order
+app.delete('/orders/:id', async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const result = await ordersCollection.findOneAndDelete({ _id: new ObjectId(req.params.id) });
+    
+    if (!result.value) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({ message: 'Order cancelled', order: { ...result.value, _id: result.value._id.toString() } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Start server after DB initialization
+initializeDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Order Service running on port ${PORT}`);
+    console.log(`API Documentation:`);
+    console.log(`POST /orders - Create order`);
+    console.log(`GET /orders - Get all orders`);
+    console.log(`GET /orders/:id - Get order by ID`);
+    console.log(`GET /orders/user/:userId - Get orders by user`);
+    console.log(`GET /orders/:id/status - Get order status`);
+    console.log(`PUT /orders/:id/status - Update order status`);
+    console.log(`DELETE /orders/:id - Cancel order`);
+  });
+});
+
+module.exports = app;

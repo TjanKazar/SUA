@@ -34,6 +34,45 @@ services:
     networks:
       - food-delivery-network
 
+  order-service:
+    build:
+      context: ./orderService
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      - api
+      - payment-service
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/orders"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  payment-service:
+    build:
+      context: ./paymentService
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/payments"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 networks:
   food-delivery-network:
     driver: bridge

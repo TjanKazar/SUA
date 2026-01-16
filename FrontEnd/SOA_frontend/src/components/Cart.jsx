@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiTrash2, FiPlus, FiMinus, FiShoppingBag } from 'react-icons/fi';
+import { FiTrash2, FiPlus, FiMinus, FiShoppingBag, FiLoader } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
+import * as api from '../api/api';
 import './Cart.css';
 
 const Cart = () => {
@@ -16,10 +17,59 @@ const Cart = () => {
     getItemsByRestaurant,
   } = useCart();
 
-  const handleCheckout = () => {
-    toast.success('Order placed successfully! 🎉');
-    clearCart();
-    navigate('/');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleCheckout = async () => {
+    if (items.length === 0) {
+      toast.error('Cart is empty');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Get or generate a user ID (in a real app, this would come from auth)
+      const userId = localStorage.getItem('userId') || `user_${Date.now()}`;
+      if (!localStorage.getItem('userId')) {
+        localStorage.setItem('userId', userId);
+      }
+
+      const groupedItems = getItemsByRestaurant();
+      let orderCount = 0;
+      // Create orders for each restaurant
+      for (const [restaurantId, { items: restaurantItems }] of Object.entries(groupedItems)) {
+        const orderData = {
+          userId,
+          restaurantId,
+          items: restaurantItems.map(item => ({
+            itemId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          })),
+        };
+
+        console.log('Calling Order API:', orderData);
+        toast('Calling Order API...', { icon: '🔄', duration: 2000 });
+        const order = await api.createOrder(orderData);
+        orderCount++;
+        toast.success(`Order #${order._id.slice(0, 8)} placed!`, {
+          duration: 4000,
+        });
+        console.log('Order API response:', order);
+      }
+
+      // Clear cart and redirect
+      clearCart();
+      toast.success(`🎉 ${orderCount} order(s) placed successfully!`);
+      setTimeout(() => {
+        navigate('/orders');
+      }, 1500);
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      toast.error(`Checkout failed: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (items.length === 0) {
@@ -118,8 +168,14 @@ const Cart = () => {
           <span>${total.toFixed(2)}</span>
         </div>
 
-        <button className="checkout-btn" onClick={handleCheckout}>
-          Place Order - ${total.toFixed(2)}
+        <button className="checkout-btn" onClick={handleCheckout} disabled={isProcessing}>
+          {isProcessing ? (
+            <>
+              <FiLoader className="spinner" /> Processing...
+            </>
+          ) : (
+            `Place Order - $${total.toFixed(2)}`
+          )}
         </button>
         
         <button className="continue-shopping-btn" onClick={() => navigate('/')}>

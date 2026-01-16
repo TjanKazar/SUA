@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiShoppingCart, FiHome, FiSettings, FiMenu, FiX } from 'react-icons/fi';
+import { FiShoppingCart, FiHome, FiSettings, FiMenu, FiX, FiPackage } from 'react-icons/fi';
 import { MdDeliveryDining } from 'react-icons/md';
 import { useCart } from '../context/CartContext';
 import './Navbar.css';
@@ -40,6 +40,16 @@ const Navbar = () => {
             >
               <FiHome />
               <span>Home</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/orders"
+              className={`navbar-link ${location.pathname === '/orders' ? 'active' : ''}`}
+              onClick={closeMobileMenu}
+            >
+              <FiPackage />
+              <span>Orders</span>
             </Link>
           </li>
           <li>
