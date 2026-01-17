@@ -7,6 +7,8 @@ import CartPage from './pages/CartPage';
 import AdminPage from './pages/AdminPage';
 import OrdersPage from './pages/OrdersPage';
 import './App.css';
+import UserPage from './pages/UserPage';
+import DeliveryPage from './pages/DeliveryPage';
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/user" element={<UserPage />} />
+          <Route path="/delivery" element={<DeliveryPage />} />
         </Routes>
       </main>
       <footer className="footer">

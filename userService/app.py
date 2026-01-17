@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, status, Query, Depends, Request, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from jose import JWTError, jwt
@@ -25,6 +26,26 @@ app = FastAPI(
     version="1.0.0",
     description="Microservice za upravljanje uporabnikov"
 )
+
+# CORS Middleware - MUST be first middleware added
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Cache preflight requests for 10 minutes
+)
+
 
 MONGO_URI = "mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/user_service"
 JWT_SECRET = "your-secret-key-change-in-production"

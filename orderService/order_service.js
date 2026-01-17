@@ -2,10 +2,22 @@ const express = require('express');
 const axios = require('axios');
 const jwt = require('jsonwebtoken');
 const amqp = require('amqplib');
-const { MongoClient } = require('mongodb');
+const cors = require('cors');  // npm install cors
 const { v4: uuidv4 } = require('uuid');
+const { MongoClient } = require('mongodb');
 const app = express();
 const PORT = 3002;
+
+const corsOptions = {
+  origin: '*',  // Or specify: ['http://localhost:3000', 'http://localhost:5173']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-Id'],
+  exposedHeaders: ['X-Correlation-Id'],
+  credentials: true,
+  optionsSuccessStatus: 200  // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
 
 const MONGO_URI = "mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/order_service";
 const JWT_SECRET = "your-secret-key-change-in-production";
@@ -16,8 +28,14 @@ const EXCHANGE_NAME = 'logs_exchange';
 
 let ordersCollection;
 let rabbitmqChannel = null;
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
+app.use((req, res, next) => {
+  req.correlationId = req.headers['x-correlation-id'] || uuidv4();
+  res.setHeader('x-correlation-id', req.correlationId);
+  next();
+});
 
 async function setupRabbitMQ() {
   try {
@@ -155,7 +173,7 @@ async function initializeDatabase() {
 }
 
 // POST /orders - Create new order
-app.post('/orders', verifyToken, async (req, res) => {
+app.post('/orders', optionalToken, async (req, res) => {
   try {
     const { userId, restaurantId, items } = req.body;
 
@@ -219,7 +237,7 @@ app.get('/orders', optionalToken, async (req, res) => {
 });
 
 // GET /orders/:id - Get order by ID
-app.get('/orders/:id', verifyToken, async (req, res) => {
+app.get('/orders/:id', optionalToken, async (req, res) => {
   try {
     const { ObjectId } = require('mongodb');
     const order = await ordersCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -233,7 +251,7 @@ app.get('/orders/:id', verifyToken, async (req, res) => {
 });
 
 // GET /orders/user/:userId - Get orders by user ID
-app.get('/orders/user/:userId', verifyToken, async (req, res) => {
+app.get('/orders/user/:userId', optionalToken, async (req, res) => {
   try {
     const userOrders = await ordersCollection.find({ userId: req.params.userId }).toArray();
     const formattedOrders = userOrders.map(o => ({
@@ -247,7 +265,7 @@ app.get('/orders/user/:userId', verifyToken, async (req, res) => {
 });
 
 // GET /orders/:id/status - Get order status
-app.get('/orders/:id/status', verifyToken, async (req, res) => {
+app.get('/orders/:id/status', optionalToken, async (req, res) => {
   try {
     const { ObjectId } = require('mongodb');
     const order = await ordersCollection.findOne({ _id: new ObjectId(req.params.id) });

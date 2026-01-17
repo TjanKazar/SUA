@@ -73,6 +73,24 @@ const Navbar = () => {
               {itemCount > 0 && <span className="cart-badge">{itemCount}</span>}
             </Link>
           </li>
+          <li>
+            <Link
+              to="/user"
+              className={`navbar-link ${location.pathname === '/user' ? 'active' : ''}`}
+              onClick={closeMobileMenu}
+            >
+              <span>User</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/delivery"
+              className={`navbar-link ${location.pathname === '/delivery' ? 'active' : ''}`}
+              onClick={closeMobileMenu}
+            >
+              <span>Delivery</span>
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>

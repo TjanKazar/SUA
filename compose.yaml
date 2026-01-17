@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: food-delivery-api
     ports:
-      - "5001:5000"
+      - "5000:5000"
     environment:
       - FLASK_ENV=production
       - MONGO_URI=mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/?appName=Cluster0&tls=true&tlsAllowInvalidCertificates=true
@@ -13,7 +13,7 @@ services:
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/restaurants"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:5000/restaurants\")' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -48,7 +48,7 @@ services:
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/orders"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3002/orders', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,7 +67,7 @@ services:
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3003/payments"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3003/payments', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -90,7 +90,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 30s
 
   user-service:
     build:
@@ -102,16 +102,17 @@ services:
     environment:
       - RABBITMQ_HOST=rabbitmq
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:3005/health\")' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
   delivery-service:
     build:
@@ -123,16 +124,17 @@ services:
     environment:
       - RABBITMQ_HOST=rabbitmq
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:3004/health\")' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
   log-service:
     build:
@@ -144,16 +146,17 @@ services:
     environment:
       - RABBITMQ_HOST=rabbitmq
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - food-delivery-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:3006/health\")' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 15s
 
 networks:
   food-delivery-network:
