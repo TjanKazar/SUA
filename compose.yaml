@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: food-delivery-api
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - FLASK_ENV=production
       - MONGO_URI=mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/?appName=Cluster0&tls=true&tlsAllowInvalidCertificates=true
@@ -24,7 +24,7 @@ services:
       context: ./FrontEnd/SOA_frontend
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=http://localhost:5000
+        - VITE_API_URL=http://localhost:5001
     container_name: food-delivery-frontend
     ports:
       - "3000:80"
@@ -68,6 +68,88 @@ services:
       - food-delivery-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3003/payments"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin123
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  user-service:
+    build:
+      context: ./userService
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "3005:3005"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  delivery-service:
+    build:
+      context: ./deliveryService
+      dockerfile: Dockerfile
+    container_name: delivery-service
+    ports:
+      - "3004:3004"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  log-service:
+    build:
+      context: ./logService
+      dockerfile: Dockerfile
+    container_name: log-service
+    ports:
+      - "3006:3006"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+    networks:
+      - food-delivery-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
       interval: 30s
       timeout: 10s
       retries: 3

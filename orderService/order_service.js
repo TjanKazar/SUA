@@ -1,13 +1,109 @@
 const express = require('express');
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
+const amqp = require('amqplib');
 const { MongoClient } = require('mongodb');
+const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = 3002;
 
 const MONGO_URI = "mongodb+srv://tjankazar_db_user:hem04yJJgOHilA1z@cluster0.ukgsfn4.mongodb.net/order_service";
+const JWT_SECRET = "your-secret-key-change-in-production";
+const RABBITMQ_HOST = process.env.RABBITMQ_HOST || 'localhost';
+const RABBITMQ_USER = 'admin';
+const RABBITMQ_PASS = 'admin123';
+const EXCHANGE_NAME = 'logs_exchange';
+
 let ordersCollection;
+let rabbitmqChannel = null;
 
 app.use(express.json());
+
+async function setupRabbitMQ() {
+  try {
+    const connection = await amqp.connect(`amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOST}:5672`);
+    rabbitmqChannel = await connection.createChannel();
+    await rabbitmqChannel.assertExchange(EXCHANGE_NAME, 'fanout', { durable: true });
+    console.log('RabbitMQ connected - Order Service');
+  } catch (error) {
+    console.error('Failed to connect to RabbitMQ:', error.message);
+  }
+}
+
+function sendLogToRabbitMQ(logData) {
+  if (rabbitmqChannel) {
+    try {
+      const message = JSON.stringify(logData);
+      rabbitmqChannel.publish(EXCHANGE_NAME, '', Buffer.from(message), { persistent: true });
+    } catch (error) {
+      console.error('Failed to send log to RabbitMQ:', error.message);
+    }
+  }
+}
+
+function correlationIdMiddleware(req, res, next) {
+  req.correlationId = req.headers['x-correlation-id'] || uuidv4();
+  res.setHeader('x-correlation-id', req.correlationId);
+  next();
+}
+
+function loggingMiddleware(req, res, next) {
+  const startTime = Date.now();
+  
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    const logData = {
+      timestamp: new Date().toISOString(),
+      logType: res.statusCode >= 400 ? 'ERROR' : 'INFO',
+      url: `http://localhost:${PORT}${req.originalUrl}`,
+      correlationId: req.correlationId,
+      serviceName: 'order-service',
+      message: `${req.method} ${req.originalUrl} - ${res.statusCode} (${duration}ms)`,
+      method: req.method,
+      statusCode: res.statusCode,
+      duration: duration
+    };
+    
+    console.log(`${logData.timestamp} ${logData.logType} ${logData.url} Correlation: ${logData.correlationId} [order-service] - ${logData.message}`);
+    sendLogToRabbitMQ(logData);
+  });
+  
+  next();
+}
+
+app.use(correlationIdMiddleware);
+app.use(loggingMiddleware);
+
+function verifyToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+    req.user = decoded;
+    next();
+  });
+}
+
+function optionalToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (!err) {
+        req.user = decoded;
+      }
+    });
+  }
+  next();
+}
 
 // Initialize MongoDB connection
 async function initializeDatabase() {
@@ -59,7 +155,7 @@ async function initializeDatabase() {
 }
 
 // POST /orders - Create new order
-app.post('/orders', async (req, res) => {
+app.post('/orders', verifyToken, async (req, res) => {
   try {
     const { userId, restaurantId, items } = req.body;
 
@@ -109,7 +205,7 @@ app.post('/orders', async (req, res) => {
 });
 
 // GET /orders - Get all orders
-app.get('/orders', async (req, res) => {
+app.get('/orders', optionalToken, async (req, res) => {
   try {
     const orders = await ordersCollection.find({}).toArray();
     const formattedOrders = orders.map(o => ({
@@ -123,7 +219,7 @@ app.get('/orders', async (req, res) => {
 });
 
 // GET /orders/:id - Get order by ID
-app.get('/orders/:id', async (req, res) => {
+app.get('/orders/:id', verifyToken, async (req, res) => {
   try {
     const { ObjectId } = require('mongodb');
     const order = await ordersCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -137,7 +233,7 @@ app.get('/orders/:id', async (req, res) => {
 });
 
 // GET /orders/user/:userId - Get orders by user ID
-app.get('/orders/user/:userId', async (req, res) => {
+app.get('/orders/user/:userId', verifyToken, async (req, res) => {
   try {
     const userOrders = await ordersCollection.find({ userId: req.params.userId }).toArray();
     const formattedOrders = userOrders.map(o => ({
@@ -151,7 +247,7 @@ app.get('/orders/user/:userId', async (req, res) => {
 });
 
 // GET /orders/:id/status - Get order status
-app.get('/orders/:id/status', async (req, res) => {
+app.get('/orders/:id/status', verifyToken, async (req, res) => {
   try {
     const { ObjectId } = require('mongodb');
     const order = await ordersCollection.findOne({ _id: new ObjectId(req.params.id) });
@@ -169,7 +265,7 @@ app.get('/orders/:id/status', async (req, res) => {
 });
 
 // PUT /orders/:id/status - Update order status
-app.put('/orders/:id/status', async (req, res) => {
+app.put('/orders/:id/status', verifyToken, async (req, res) => {
   try {
     if (!ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid order ID format' });
@@ -202,7 +298,7 @@ app.put('/orders/:id/status', async (req, res) => {
 });
 
 // DELETE /orders/:id - Cancel order
-app.delete('/orders/:id', async (req, res) => {
+app.delete('/orders/:id', verifyToken, async (req, res) => {
   try {
     const { ObjectId } = require('mongodb');
     const result = await ordersCollection.findOneAndDelete({ _id: new ObjectId(req.params.id) });
@@ -218,7 +314,8 @@ app.delete('/orders/:id', async (req, res) => {
 });
 
 // Start server after DB initialization
-initializeDatabase().then(() => {
+initializeDatabase().then(async () => {
+  await setupRabbitMQ();
   app.listen(PORT, () => {
     console.log(`Order Service running on port ${PORT}`);
     console.log(`API Documentation:`);
