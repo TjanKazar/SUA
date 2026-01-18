@@ -28,7 +28,7 @@ def get_restaurant(restaurant_id):
         abort(404, "Restaurant not found")
     r['_id'] = str(r['_id'])
     return jsonify(r)
-
+# -----------------------------
 
 @app.route('/restaurants', methods=['POST'])
 def create_restaurant():
