@@ -24,10 +24,16 @@ const OrdersPage = () => {
         return;
       }
       const userOrders = await api.getUserOrders(userId);
-      setOrders(userOrders);
+      // Filter out any invalid orders and ensure we have valid data
+      const validOrders = Array.isArray(userOrders) 
+        ? userOrders.filter(order => order && order._id && order.status)
+        : [];
+      setOrders(validOrders);
+      console.log('Loaded orders:', validOrders.length);
     } catch (error) {
       console.error('Failed to load orders:', error);
       toast.error('Failed to load orders');
+      setOrders([]); // Clear orders on error
     } finally {
       setIsLoading(false);
     }
@@ -60,13 +66,19 @@ const OrdersPage = () => {
     if (window.confirm('Are you sure you want to cancel this order?')) {
       try {
         console.log('Calling Cancel Order API for:', orderId);
-        toast('Calling Cancel Order API...', { icon: '🔄', duration: 2000 });
         await api.cancelOrder(orderId);
-        toast.success('Order cancelled');
-        loadOrders();
+        toast.success('Order cancelled successfully!');
+        
+        // Remove the order from local state immediately for better UX
+        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+        
+        // Wait a bit before reloading to ensure database is updated
+        setTimeout(() => {
+          loadOrders();
+        }, 500);
       } catch (error) {
         console.error('Cancel Order API failed:', error);
-        toast.error('Failed to cancel order');
+        toast.error(error.message || 'Failed to cancel order');
       }
     }
   };

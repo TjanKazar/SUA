@@ -9,12 +9,12 @@ const app = express();
 const PORT = 3002;
 
 const corsOptions = {
-  origin: '*',  // Or specify: ['http://localhost:3000', 'http://localhost:5173']
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-Id'],
   exposedHeaders: ['X-Correlation-Id'],
   credentials: true,
-  optionsSuccessStatus: 200  // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
@@ -201,36 +201,6 @@ app.post('/orders', optionalToken, async (req, res) => {
       deliveryStatus: 'pending'
     };
 
-    // POST /orders/:id/note - Add note to order
-app.post('/orders/:id/note', verifyToken, async (req, res) => {
-  try {
-    const { ObjectId } = require('mongodb');
-    const { note } = req.body;
-
-    if (!note) {
-      return res.status(400).json({ error: 'Note is required' });
-    }
-
-    const result = await ordersCollection.findOneAndUpdate(
-      { _id: new ObjectId(req.params.id) },
-      { $set: { note } },
-      { returnDocument: 'after' }
-    );
-
-    if (!result.value) {
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    res.status(201).json({
-      message: 'Note added',
-      order: { ...result.value, _id: result.value._id.toString() }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-
     const result = await ordersCollection.insertOne(newOrder);
     newOrder._id = result.insertedId;
 
@@ -247,6 +217,35 @@ app.post('/orders/:id/note', verifyToken, async (req, res) => {
     }
 
     res.status(201).json({ ...newOrder, _id: newOrder._id.toString() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /orders/:id/note - Add note to order
+app.post('/orders/:id/note', verifyToken, async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const { note } = req.body;
+
+    if (!note) {
+      return res.status(400).json({ error: 'Note is required' });
+    }
+
+    const result = await ordersCollection.findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { note } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.status(201).json({
+      message: 'Note added',
+      order: { ...result, _id: result._id.toString() }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -335,11 +334,11 @@ app.put('/orders/:id/status', verifyToken, async (req, res) => {
       { returnDocument: 'after' }
     );
 
-    if (!result.value) {
+    if (!result) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    res.status(200).json({ ...result.value, _id: result.value._id.toString() });
+    res.status(200).json({ ...result, _id: result._id.toString() });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -381,11 +380,11 @@ app.delete('/orders/:id', verifyToken, async (req, res) => {
     const { ObjectId } = require('mongodb');
     const result = await ordersCollection.findOneAndDelete({ _id: new ObjectId(req.params.id) });
     
-    if (!result.value) {
+    if (!result) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    res.json({ message: 'Order cancelled', order: { ...result.value, _id: result.value._id.toString() } });
+    res.json({ message: 'Order cancelled', order: { ...result, _id: result._id.toString() } });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -402,13 +401,13 @@ app.delete('/orders/:id/note', verifyToken, async (req, res) => {
       { returnDocument: 'after' }
     );
 
-    if (!result.value) {
+    if (!result) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
     res.json({
       message: 'Note removed',
-      order: { ...result.value, _id: result.value._id.toString() }
+      order: { ...result, _id: result._id.toString() }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

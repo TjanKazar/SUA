@@ -33,17 +33,16 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
-    "*"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=600,  # Cache preflight requests for 10 minutes
+    max_age=600,
 )
 
 
@@ -162,6 +161,9 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    
     correlation_id = request.headers.get('x-correlation-id', str(uuid.uuid4()))
     start_time = time.time()
     

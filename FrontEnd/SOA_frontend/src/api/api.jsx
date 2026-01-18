@@ -1,4 +1,4 @@
-const RESTAURANT_API_URL = 'http://localhost:5000';
+const RESTAURANT_API_URL = 'http://localhost:5001';
 const ORDER_API_URL = 'http://localhost:3002';
 const PAYMENT_API_URL = 'http://localhost:3003';
 const USER_API_URL = 'http://localhost:3005';
@@ -119,10 +119,11 @@ export const getOrderById = async (orderId) => {
 
 // GET /orders/user/:userId - Get user's orders
 export const getUserOrders = async (userId) => {
-  const response = await fetch(`${ORDER_API_URL}/orders/user/${userId}`, {
+  const response = await fetch(`${ORDER_API_URL}/orders/user/${userId}?_t=${Date.now()}`, {
     headers: {
       ...getAuthHeaders(),  // ✅ ADDED
     },
+    cache: 'no-cache',
   });
   return handleResponse(response);
 };

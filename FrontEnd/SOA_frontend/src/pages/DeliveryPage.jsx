@@ -38,7 +38,7 @@ const DeliveryPage = () => {
   });
   const [assignDriverId, setAssignDriverId] = useState('');
 
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('token');
 
   const fetchDeliveries = useCallback(async () => {
     setIsLoading(true);
