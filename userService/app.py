@@ -507,6 +507,46 @@ async def delete_user(
             detail=str(e)
         )
 
+@app.delete("/users/{user_id}/deactivate")
+async def delete_deactivate_user(
+    user_id: str,
+    current_user: dict = Depends(verify_token)
+):
+    try:
+        if current_user.get("role") != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only admins can deactivate users"
+            )
+
+        if not ObjectId.is_valid(user_id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid user ID"
+            )
+
+        result = users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"isActive": False}}
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        return {"message": "User deactivated successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Soft delete user error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
 @app.put("/users/{user_id}/password")
 async def change_password(
     user_id: str,

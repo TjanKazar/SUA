@@ -201,6 +201,36 @@ app.post('/orders', optionalToken, async (req, res) => {
       deliveryStatus: 'pending'
     };
 
+    // POST /orders/:id/note - Add note to order
+app.post('/orders/:id/note', verifyToken, async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const { note } = req.body;
+
+    if (!note) {
+      return res.status(400).json({ error: 'Note is required' });
+    }
+
+    const result = await ordersCollection.findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { note } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.status(201).json({
+      message: 'Note added',
+      order: { ...result.value, _id: result.value._id.toString() }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
     const result = await ordersCollection.insertOne(newOrder);
     newOrder._id = result.insertedId;
 
@@ -315,6 +345,36 @@ app.put('/orders/:id/status', verifyToken, async (req, res) => {
   }
 });
 
+// PUT /orders/:id/note - Update order note
+app.put('/orders/:id/note', verifyToken, async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const { note } = req.body;
+
+    if (!note) {
+      return res.status(400).json({ error: 'Note is required' });
+    }
+
+    const result = await ordersCollection.findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { note } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({
+      message: 'Note updated',
+      order: { ...result.value, _id: result.value._id.toString() }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // DELETE /orders/:id - Cancel order
 app.delete('/orders/:id', verifyToken, async (req, res) => {
   try {
@@ -331,6 +391,31 @@ app.delete('/orders/:id', verifyToken, async (req, res) => {
   }
 });
 
+// DELETE /orders/:id/note - Remove order note
+app.delete('/orders/:id/note', verifyToken, async (req, res) => {
+  try {
+    const { ObjectId } = require('mongodb');
+
+    const result = await ordersCollection.findOneAndUpdate(
+      { _id: new ObjectId(req.params.id) },
+      { $unset: { note: '' } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({
+      message: 'Note removed',
+      order: { ...result.value, _id: result.value._id.toString() }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // Start server after DB initialization
 initializeDatabase().then(async () => {
   await setupRabbitMQ();
@@ -338,12 +423,16 @@ initializeDatabase().then(async () => {
     console.log(`Order Service running on port ${PORT}`);
     console.log(`API Documentation:`);
     console.log(`POST /orders - Create order`);
+    console.log(`POST /orders/:id/note - Add note to order`);
     console.log(`GET /orders - Get all orders`);
     console.log(`GET /orders/:id - Get order by ID`);
     console.log(`GET /orders/user/:userId - Get orders by user`);
     console.log(`GET /orders/:id/status - Get order status`);
     console.log(`PUT /orders/:id/status - Update order status`);
+    console.log(`PUT /orders/:id/note - Update order note`);
+    console.log(`DELETE /orders/:id/note - Remove order note`);
     console.log(`DELETE /orders/:id - Cancel order`);
+
   });
 });
 

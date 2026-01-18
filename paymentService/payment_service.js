@@ -213,6 +213,76 @@ fastify.put('/payments/:id/status', async (request, reply) => {
   }
 });
 
+// PUT /payments/:id/method - Update payment method
+fastify.put('/payments/:id/method', async (request, reply) => {
+  try {
+    const { ObjectId } = require('mongodb');
+    const { paymentMethod } = request.body;
+
+    if (!paymentMethod) {
+      return reply.code(400).send({ error: 'paymentMethod is required' });
+    }
+
+    const result = await paymentsCollection.findOneAndUpdate(
+      { _id: new ObjectId(request.params.id) },
+      { $set: { paymentMethod } },
+      { returnDocument: 'after' }
+    );
+
+    if (!result.value) {
+      return reply.code(404).send({ error: 'Payment not found' });
+    }
+
+    return reply.send({
+      message: 'Payment method updated',
+      payment: { ...result.value, _id: result.value._id.toString() }
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: error.message });
+  }
+});
+
+// DELETE /payments/:id - Delete payment by ID
+fastify.delete('/payments/:id', async (request, reply) => {
+  try {
+    const { ObjectId } = require('mongodb');
+
+    const result = await paymentsCollection.findOneAndDelete({
+      _id: new ObjectId(request.params.id)
+    });
+
+    if (!result.value) {
+      return reply.code(404).send({ error: 'Payment not found' });
+    }
+
+    return reply.send({
+      message: 'Payment deleted',
+      payment: { ...result.value, _id: result.value._id.toString() }
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: error.message });
+  }
+});
+
+// DELETE /payments/user/:userId - Delete all payments for a user
+fastify.delete('/payments/user/:userId', async (request, reply) => {
+  try {
+    const result = await paymentsCollection.deleteMany({
+      userId: request.params.userId
+    });
+
+    return reply.send({
+      message: 'Payments deleted for user',
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    return reply.code(500).send({ error: error.message });
+  }
+});
+
+
+
+
 const start = async () => {
   try {
     await initializeDatabase();
@@ -225,6 +295,9 @@ const start = async () => {
     fastify.log.info(`GET /payments/user/:userId - Get payments by user`);
     fastify.log.info(`POST /payments/:id/confirm - Confirm payment`);
     fastify.log.info(`PUT /payments/:id/status - Update payment status`);
+    fastify.log.info(`PUT /payments/:id/method - Update payment method`);
+    fastify.log.info(`DELETE /payments/:id - Delete payment by ID`);
+    fastify.log.info(`DELETE /payments/user/:userId - Delete all payments for a user`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
